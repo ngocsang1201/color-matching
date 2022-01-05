@@ -15,7 +15,7 @@ export function getRandomColorPairs(count) {
 		// randomColor function is provided by https://github.com/davidmerfield/randomColor
 		const color = randomColor({
 			luminosity: 'dark',
-			hue: i % hueList.length,
+			hue: hueList[i % hueList.length],
 		});
 
 		colorList.push(color);
