@@ -1,5 +1,6 @@
 import { GAME_STATUS, GAME_TIME, PAIRS_COUNT } from './constants.js';
 import {
+	getColorBackground,
 	getColorItemList,
 	getColorListElement,
 	getInactiveColorElementList,
@@ -17,8 +18,7 @@ import {
 let selections = [];
 let gameStatus = GAME_STATUS.PLAYING;
 let timer = createTimer({
-	// seconds: GAME_TIME,
-	seconds: 5,
+	seconds: GAME_TIME,
 	onChange: handleTimerChange,
 	onFinish: handleTimerFinish,
 });
@@ -28,9 +28,9 @@ function handleTimerChange(second) {
 }
 
 function handleTimerFinish() {
+	gameStatus = GAME_STATUS.FINISHED;
 	setTimerText('You are a loser!');
 	showPlayAgainButton();
-	gameStatus = GAME_STATUS.FINISHED;
 }
 
 // TODOs
@@ -52,8 +52,9 @@ function handleColorItemClick(liElement) {
 
 	const firstColor = selections[0].dataset.color;
 	const secondColor = selections[1].dataset.color;
+	const isMatch = firstColor === secondColor;
 
-	if (firstColor === secondColor) {
+	if (isMatch) {
 		const isWin = getInactiveColorElementList().length === 0;
 
 		if (isWin) {
@@ -62,6 +63,9 @@ function handleColorItemClick(liElement) {
 			gameStatus = GAME_STATUS.FINISHED;
 			timer.clear();
 		}
+
+		const background = getColorBackground();
+		if (background) background.style.backgroundColor = firstColor;
 
 		selections = [];
 		return;
@@ -73,6 +77,7 @@ function handleColorItemClick(liElement) {
 		selections[1].classList.remove('active');
 		selections = [];
 
+		// race condition with handleTimerFinish
 		if (gameStatus !== GAME_STATUS.FINISHED) {
 			gameStatus = GAME_STATUS.PLAYING;
 		}
@@ -123,7 +128,6 @@ function resetGame() {
 	// re-render color list
 	initColorList();
 
-	// start new timer
 	startTimer();
 }
 
