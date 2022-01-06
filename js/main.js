@@ -10,6 +10,7 @@ import {
 	createTimer,
 	getRandomColorPairs,
 	hidePlayAgainButton,
+	setBackgroundColor,
 	setTimerText,
 	showPlayAgainButton,
 } from './utils.js';
@@ -55,17 +56,15 @@ function handleColorItemClick(liElement) {
 	const isMatch = firstColor === secondColor;
 
 	if (isMatch) {
-		const isWin = getInactiveColorElementList().length === 0;
+		setBackgroundColor(firstColor);
 
+		const isWin = getInactiveColorElementList().length === 0;
 		if (isWin) {
 			showPlayAgainButton();
 			setTimerText('You win!');
 			gameStatus = GAME_STATUS.FINISHED;
 			timer.clear();
 		}
-
-		const background = getColorBackground();
-		if (background) background.style.backgroundColor = firstColor;
 
 		selections = [];
 		return;
