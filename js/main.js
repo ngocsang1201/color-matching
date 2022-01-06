@@ -1,16 +1,37 @@
-import { getRandomColorPairs } from './colorHelper.js';
-import { GAME_STATE, PAIRS_COUNT } from './constants.js';
+import { GAME_STATUS, GAME_TIME, PAIRS_COUNT } from './constants.js';
 import {
 	getColorItemList,
 	getColorListElement,
 	getInactiveColorElementList,
 	getPlayAgainButton,
-	getTimerElement,
 } from './selectors.js';
+import {
+	createTimer,
+	getRandomColorPairs,
+	hidePlayAgainButton,
+	setTimerText,
+	showPlayAgainButton,
+} from './utils.js';
 
 // Global variables
 let selections = [];
-let gameStatus = GAME_STATE.PLAYING;
+let gameStatus = GAME_STATUS.PLAYING;
+let timer = createTimer({
+	// seconds: GAME_TIME,
+	seconds: 5,
+	onChange: handleTimerChange,
+	onFinish: handleTimerFinish,
+});
+
+function handleTimerChange(second) {
+	setTimerText(`${second}s`);
+}
+
+function handleTimerFinish() {
+	setTimerText('You are a loser!');
+	showPlayAgainButton();
+	gameStatus = GAME_STATUS.FINISHED;
+}
 
 // TODOs
 // 1. Generate colors using https://github.com/davidmerfield/randomColor
@@ -19,14 +40,10 @@ let gameStatus = GAME_STATE.PLAYING;
 // 4. Add timer
 // 5. Handle replay click
 
-// function showReplayButton() {
-// 	const replayButton = getPlayAgainButton();
-// 	if (replayButton) replayButton.style.display = 'block';
-// }
-
 function handleColorItemClick(liElement) {
-	const isBlocked = [GAME_STATE.BLOCKING, GAME_STATE.FINISHED].includes(gameStatus);
-	if (!liElement || isBlocked) return;
+	const isBlocked = [GAME_STATUS.BLOCKING, GAME_STATUS.FINISHED].includes(gameStatus);
+	const isClicked = liElement.classList.contains('active');
+	if (!liElement || isBlocked || isClicked) return;
 
 	liElement.classList.add('active');
 
@@ -40,22 +57,25 @@ function handleColorItemClick(liElement) {
 		const isWin = getInactiveColorElementList().length === 0;
 
 		if (isWin) {
-			// showReplayButton();
-			// getTimerElement().textContent = 'You win!';
-			// gameStatus = GAME_STATE.FINISHED;
+			showPlayAgainButton();
+			setTimerText('You win!');
+			gameStatus = GAME_STATUS.FINISHED;
+			timer.clear();
 		}
 
 		selections = [];
 		return;
 	}
 
-	gameStatus = GAME_STATE.BLOCKING;
+	gameStatus = GAME_STATUS.BLOCKING;
 	setTimeout(() => {
 		selections[0].classList.remove('active');
 		selections[1].classList.remove('active');
 		selections = [];
 
-		gameStatus = GAME_STATE.PLAYING;
+		if (gameStatus !== GAME_STATUS.FINISHED) {
+			gameStatus = GAME_STATUS.PLAYING;
+		}
 	}, 500);
 }
 
@@ -76,11 +96,50 @@ function attachEventForColorList() {
 	if (!colorListElement) return;
 
 	colorListElement.addEventListener('click', (e) => {
+		if (e.target.tagName !== 'LI') return;
 		handleColorItemClick(e.target);
 	});
+}
+
+function resetGame() {
+	// Reset global variables
+	selections = [];
+	gameStatus = GAME_STATUS.PLAYING;
+
+	// Reset DOM
+	// - Remove active class from all li elements
+	// - Hide play again button
+	// - Reset timer text
+	const colorElementList = getColorItemList();
+	if (!colorElementList) return;
+
+	for (const colorElement of colorElementList) {
+		colorElement.classList.remove('active');
+	}
+
+	hidePlayAgainButton();
+	setTimerText('');
+
+	// re-render color list
+	initColorList();
+
+	// start new timer
+	startTimer();
+}
+
+function startTimer() {
+	timer.start();
+}
+
+function attachEventForPlayAgainButton() {
+	const playAgainButton = getPlayAgainButton();
+	if (!playAgainButton) return;
+	playAgainButton.addEventListener('click', resetGame);
 }
 
 (() => {
 	initColorList();
 	attachEventForColorList();
+	attachEventForPlayAgainButton();
+	startTimer();
 })();

@@ -67,6 +67,10 @@
 	opacity: 0.7;
 }
 
+.game__button.show {
+	display: block;
+}
+
 .color-list {
 	display: flex;
 	flex-flow: row wrap;

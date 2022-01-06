@@ -1,4 +1,4 @@
-export const GAME_STATE = {
+export const GAME_STATUS = {
 	PENDING: 'pending',
 	PLAYING: 'playing',
 	BLOCKING: 'blocking',
